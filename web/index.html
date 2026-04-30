@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SecureNotes · PierceMyCode</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d0d1a">
+    <meta name="description" content="SecureNotes - Notas seguras con cifrado local">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Firebase (opcional, comentar si no se usa) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- ===== COLUMNA DE NAVEGACIÓN (IZQUIERDA) ===== -->
+        <aside id="navigationColumn">
+            <div class="nav-header">
+                <div class="logo">
+                    <svg class="logo-svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M8 8h8M8 12h6M8 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="logo-text">SecureNotes</span>
+                    <span class="logo-badge">v2</span>
+                </div>
+                <button id="menuClose" class="btn-icon" title="Cerrar">✕</button>
+            </div>
+
+            <div class="nav-actions">
+                <button id="newNoteBtn" class="btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Nueva nota
+                </button>
+            </div>
+
+            <nav class="nav-sections">
+                <div class="nav-section">
+                    <span class="nav-section-title">Vistas</span>
+                    <a href="#" class="nav-item active" data-view="notes">
+                        <svg class="nav-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Todas las notas
+                        <span class="badge" id="notesCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="passwords">
+                        <svg class="nav-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        SecurePasswords
+                        <span class="badge" id="passwordsCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="archived">
+                        <svg class="nav-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                        Archivadas
+                        <span class="badge" id="archivedCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="trash">
+                        <svg class="nav-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Papelera
+                        <span class="badge" id="trashCount">0</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">Temas</span>
+                    <a href="#" class="nav-item theme-item active" data-theme="dark">
+                        <span class="theme-dot" style="background:#0d0d1a;border-color:#7c3aed;"></span> Dark
+                    </a>
+                    <a href="#" class="nav-item theme-item" data-theme="light">
+                        <span class="theme-dot" style="background:#ffffff;border-color:#7c3aed;"></span> Light
+                    </a>
+                    <a href="#" class="nav-item theme-item" data-theme="midnight">
+                        <span class="theme-dot" style="background:#0a0a1a;border-color:#4f46e5;"></span> Midnight
+                    </a>
+                    <a href="#" class="nav-item theme-item" data-theme="sepia">
+                        <span class="theme-dot" style="background:#fbf0d9;border-color:#8b6914;"></span> Sepia
+                    </a>
+                    <a href="#" class="nav-item theme-item" data-theme="solarized">
+                        <span class="theme-dot" style="background:#002b36;border-color:#268bd2;"></span> Solarized
+                    </a>
+                    <a href="#" class="nav-item theme-item" data-theme="gruvbox">
+                        <span class="theme-dot" style="background:#282828;border-color:#d79921;"></span> Gruvbox
+                    </a>
+                    <a href="#" id="customThemeBtn" class="nav-item" style="font-size:12px;color:var(--sn-stylekit-info-color);margin-top:4px;">
+                        🎨 Personalizar tema
+                    </a>
+                </div>
+            </nav>
+
+            <div class="nav-footer">
+                <div class="nav-footer-row">
+                    <span class="footer-text">Creado por PierceMyCode</span>
+                    <button id="themeToggle" class="btn-icon-small" title="Cambiar tema">🌙</button>
+                </div>
+                <div class="nav-footer-row" style="margin-top:4px;">
+                    <span class="footer-version" id="connectionStatus">☁️ Conectando...</span>
+                    <button id="exportBtn" class="btn-icon-small" title="Exportar datos">⬇️</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== CONTENIDO PRINCIPAL ===== -->
+        <main id="mainContent">
+            <!-- Barra superior -->
+            <header id="topBar">
+                <button id="sidebarToggle" class="btn-icon" title="Menú">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="Buscar notas..." spellcheck="false">
+                </div>
+                <div class="top-actions">
+                    <button id="sortBtn" class="btn-small" title="Ordenar">📅 Recientes</button>
+                </div>
+            </header>
+
+            <!-- Área de contenido: lista + editor -->
+            <div id="contentArea">
+                <!-- Columna de items (lista de notas) -->
+                <section id="itemsColumn">
+                    <div id="notesList" class="items-list"></div>
+                    <div id="emptyState" class="empty-state">
+                        <div class="empty-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        </div>
+                        <h3>No hay notas</h3>
+                        <p>Crea tu primera nota</p>
+                        <button id="emptyNewNote" class="btn-primary" style="width:auto;padding:8px 24px;">Crear nota</button>
+                    </div>
+                </section>
+
+                <!-- Columna del editor (derecha) -->
+                <section id="editorColumn">
+                    <!-- Estado vacío -->
+                    <div id="editorEmpty" class="editor-empty">
+                        <div class="empty-icon" style="font-size:48px;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </div>
+                        <h3>Selecciona una nota</h3>
+                        <p style="font-size:13px;">o crea una nueva para empezar a escribir</p>
+                    </div>
+
+                    <!-- Editor activo -->
+                    <div id="editorContent" class="editor-content hidden">
+                        <div class="editor-header-bar">
+                            <input type="text" id="noteTitle" placeholder="Título..." class="editor-title-input" spellcheck="false">
+                            <div class="editor-meta-bar">
+                                <span id="noteDate"></span>
+                                <span id="noteWordCount"></span>
+                                <span id="noteSyncStatus">☁️</span>
+                            </div>
+                        </div>
+                        <div class="editor-pane">
+                            <textarea id="noteBody" placeholder="Empieza a escribir..." class="editor-body" spellcheck="true"></textarea>
+                        </div>
+                        <div class="editor-footer-bar">
+                            <button id="archiveBtn" class="btn-small" title="Archivar">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                                Archivar
+                            </button>
+                            <button id="trashBtn" class="btn-small btn-danger" title="Mover a papelera">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Papelera
+                            </button>
+                            <button id="deleteBtn" class="btn-small btn-danger hidden" title="Eliminar permanentemente">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel de contraseñas -->
+                    <div id="passwordPanel" class="hidden">
+                        <!-- Contenido del generador de contraseñas... -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de temas personalizados -->
+    <div id="themeModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎨 Personalizar tema</h2>
+                <button id="closeThemeModal" class="btn-icon">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="theme-customizer">
+                    <div class="customizer-group">
+                        <label>Fondo principal</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cBgPrimary" value="#0d0d1a">
+                            <input type="text" id="cBgPrimaryHex" value="#0d0d1a">
+                        </div>
+                    </div>
+                    <div class="customizer-group">
+                        <label>Fondo secundario (sidebar)</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cBgSecondary" value="#16162a">
+                            <input type="text" id="cBgSecondaryHex" value="#16162a">
+                        </div>
+                    </div>
+                    <div class="customizer-group">
+                        <label>Texto principal</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cTextPrimary" value="#e8e8f0">
+                            <input type="text" id="cTextPrimaryHex" value="#e8e8f0">
+                        </div>
+                    </div>
+                    <div class="customizer-group">
+                        <label>Color de acento</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cAccent" value="#7c3aed">
+                            <input type="text" id="cAccentHex" value="#7c3aed">
+                        </div>
+                    </div>
+                    <div class="customizer-group">
+                        <label>Texto secundario</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cTextSecondary" value="#9898b8">
+                            <input type="text" id="cTextSecondaryHex" value="#9898b8">
+                        </div>
+                    </div>
+                    <div class="customizer-group">
+                        <label>Bordes</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cBorder" value="#2a2a4a">
+                            <input type="text" id="cBorderHex" value="#2a2a4a">
+                        </div>
+                    </div>
+                    <div class="customizer-group">
+                        <label>Nota seleccionada</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cSelected" value="#1e1e3a">
+                            <input type="text" id="cSelectedHex" value="#1e1e3a">
+                        </div>
+                    </div>
+                    <div class="customizer-group">
+                        <label>Fondo del editor</label>
+                        <div class="customizer-row">
+                            <input type="color" id="cEditorBg" value="#0d0d1a">
+                            <input type="text" id="cEditorBgHex" value="#0d0d1a">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="resetThemeBtn" class="btn-small btn-danger">Restablecer</button>
+                <button id="applyThemeBtn" class="btn-primary" style="width:auto;">Aplicar tema</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+node_modules/
+desktop/release/
+desktop/icons/
+mobile/android/
+mobile/ios/
+*.log
+.DS_Store
+Thumbs.db
+.env
